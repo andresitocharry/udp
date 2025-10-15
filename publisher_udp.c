@@ -1,6 +1,6 @@
 // publisher_udp.c
-// este programa actua como publicador udp y envia mensajes al broker
-// cada mensaje se manda con un tema especifico
+// version automatica para pruebas de trafico udp
+// envia muchos mensajes seguidos para observar posibles perdidas o desorden
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +14,8 @@
 int main() {
     int sock;
     struct sockaddr_in broker;
-    char tema[60], mensaje[256], paquete[BUF_TAM];
+    char tema[60] = "partido1";    // tema fijo para pruebas
+    char paquete[BUF_TAM];
 
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("error creando socket udp");
@@ -26,26 +27,22 @@ int main() {
     broker.sin_port = htons(PUERTO_BROKER);
     broker.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    printf("publicador udp listo. escribe 'salir' para terminar.\n");
+    printf("publicador automatico udp enviando mensajes al broker...\n");
 
-    while (1) {
-        printf("\ntema: ");
-        fgets(tema, sizeof(tema), stdin);
-        tema[strcspn(tema, "\n")] = 0;
-        if (strcmp(tema, "salir") == 0) break;
-
-        printf("mensaje: ");
-        fgets(mensaje, sizeof(mensaje), stdin);
-        mensaje[strcspn(mensaje, "\n")] = 0;
-
-        snprintf(paquete, sizeof(paquete), "PUB:%s:%s", tema, mensaje);
+    // enviar 450 mensajes seguidos para generar trafico
+    for (int i = 0; i < 10; i++) {
+        snprintf(paquete, sizeof(paquete), "PUB:%s:mensaje %d en ", tema, i);
 
         sendto(sock, paquete, strlen(paquete), 0,
                (struct sockaddr *)&broker, sizeof(broker));
 
-        printf("mensaje enviado al broker en tema '%s'\n", tema);
+        printf("enviado -> %s\n", paquete);
+
+        
+        
     }
 
+    printf("envio finalizado.\n");
     close(sock);
     return 0;
 }
